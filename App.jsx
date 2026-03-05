@@ -134,23 +134,42 @@ function PillControl({ tabs, activeTab, onTabChange, small, accentColor = teamCo
   const h = small ? 26 : 33;
   const fs = small ? 10 : 13;
   const lh = small ? t.small : t.caption;
+  const containerRef = useRef(null);
+  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const hasInteracted = useRef(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const idx = tabs.indexOf(activeTab);
+    const btn = el.querySelectorAll("button")[idx];
+    if (btn) setPill({ left: btn.offsetLeft, width: btn.offsetWidth });
+  }, [activeTab, tabs]);
+
   return (
-    <div style={{
-      display: "flex", background: "transparent",
+    <div ref={containerRef} style={{
+      display: "flex", position: "relative", background: "transparent",
       borderRadius: t.radiusFull, padding: 2,
       ...(small ? { display: "inline-flex" } : {}),
       ...style,
     }}>
+      <div style={{
+        position: "absolute", top: 2, bottom: 2, left: 0,
+        width: pill.width, borderRadius: t.radiusFull, background: accentColor,
+        transition: hasInteracted.current ? "transform 350ms cubic-bezier(0.25,1.05,0.5,1), width 350ms cubic-bezier(0.25,1.05,0.5,1)" : "none",
+        transform: `translateX(${pill.left}px)`,
+        pointerEvents: "none",
+      }} />
       {tabs.map((tab) => {
         const isActive = tab === activeTab;
         return (
-          <button key={tab} onClick={() => onTabChange(tab)} style={{
+          <button key={tab} onClick={() => { hasInteracted.current = true; onTabChange(tab); }} style={{
             ...font(fs, t.medium, { lineHeight: lh }),
-            padding: `0 15px`,
+            padding: `0 15px`, position: "relative", zIndex: 1,
             height: h, borderRadius: t.radiusFull, border: "none", cursor: "pointer",
-            background: isActive ? accentColor : "transparent",
+            background: "transparent",
             color: isActive ? "white" : t.textTertiary,
-            transition: "background 0.2s, color 0.2s",
+            transition: "color 0.2s",
             ...(small ? {} : { flex: 1 }),
           }}>
             {tab}
